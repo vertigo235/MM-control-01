@@ -1,7 +1,7 @@
 // config.h - main configuration file
 
 
-#define FW_VERSION ZB.1.0.0 // example: 103 means version 1.0.3
+#define FW_VERSION 110 // example: 103 means version 1.0.3
 #define FW_BUILDNR 148 // number of commits in 'master'
 
 // timer0

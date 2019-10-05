@@ -1,0 +1,101 @@
+kind: pipeline
+name: default
+
+workspace:
+  path: Prusa-Firmware
+
+steps:
+  - name: tests
+    image: vertigo235/fw-build:develop
+    failure: ignore
+    commands:
+      - git fetch --unshallow || if [ $? -eq 128 ]; then true; else false; fi
+      - git rev-list --count HEAD
+      - bash -x test.sh
+    when:
+      event: 
+        - push
+        - tag
+        - pull_request
+  
+  - name: build
+    image: vertigo235/fw-build:develop
+    environment:
+      BUILD_TYPE: GOLD
+    commands:
+      - bash -x build.sh
+      - wget https://github.com/prusa3d/caterina/releases/download/V4/Caterina-prusa_mm_control.hex
+      - srec_cat ../MM-control-01-build/MM-control-01.hex.tmp -Intel Caterina-prusa_mm_control.hex -Intel -Output MM-control-01_with_bootloader.hex -Intel
+      - mv Doxyfile MM-control-01/Doxyfile && cd MM-control-01
+      - doxygen && cd ..
+    when:
+      event:
+       - push
+       - tag
+       - pull_request
+
+  - name: prepare-hex
+    image: vertigo235/fw-build:develop
+    commands:
+      - cd $CI_WORKSPACE
+      - mkdir out
+      - mkdir fileshare
+      - cd $DRONE_WORKSPACE_BASE/
+      #- mv `find -name "*.zip"` $CI_WORKSPACE/out
+      - mv `find -name "*.hex"` $CI_WORKSPACE/out
+      - cd $CI_WORKSPACE/fileshare
+      - zip -q -j prusa3d_mmu_fw_$(git rev-parse --short HEAD).zip $CI_WORKSPACE/out/*.*
+
+    when:
+      event:
+       - tag
+       - push
+       - pull_request
+    depends_on:
+      - build
+
+  - name: transfersh
+    image: vertigo235/fw-build:develop
+    failure: ignore
+    commands:
+      - cd $CI_WORKSPACE/fileshare
+      - curl --upload-file prusa3d_mmu_fw_$(git rev-parse --short HEAD).zip https://transfer.sh/prusa3d_fw_$(git rev-parse --short HEAD).zip
+      - echo
+    when:
+      event:
+      - push
+      - tag
+      - pull_request
+    depends_on:
+      - prepare-hex
+
+  - name: fileio
+    image: vertigo235/fw-build:develop
+    failure: ignore
+    commands:
+      - cd $CI_WORKSPACE/fileshare
+      - curl -F "file=@prusa3d_mmu_fw_$(git rev-parse --short HEAD).zip" https://file.io
+      - echo
+    when:
+      event:
+      - push
+      - tag
+      - pull_request
+    depends_on:
+      - prepare-hex
+
+  - name: publish
+    image: plugins/github-release
+    settings:
+      api_key:
+        from_secret: github-token
+      prerelease: true
+      draft: true    
+      checksum: md5
+      files: 
+        - out/*.*
+    when:
+      event: 
+        - tag
+    depends_on:
+      - prepare-hex

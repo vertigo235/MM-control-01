@@ -2,7 +2,7 @@ kind: pipeline
 name: default
 
 workspace:
-  path: Prusa-Firmware
+  path: MM-control-01
 
 steps:
   - name: tests
@@ -44,7 +44,7 @@ steps:
       #- mv `find -name "*.zip"` $CI_WORKSPACE/out
       - mv `find -name "*.hex"` $CI_WORKSPACE/out
       - cd $CI_WORKSPACE/fileshare
-      - zip -q -j prusa3d_mmu_fw_$(git rev-parse --short HEAD).zip $CI_WORKSPACE/out/*.*
+      - zip -q -j prusa3d_mmu_fw_$(git rev-parse --short HEAD).zip $CI_WORKSPACE/out/MM-control-01*.*
 
     when:
       event:
@@ -93,7 +93,7 @@ steps:
       draft: true    
       checksum: md5
       files: 
-        - out/*.*
+        - out/MM-control-01*.hex
     when:
       event: 
         - tag

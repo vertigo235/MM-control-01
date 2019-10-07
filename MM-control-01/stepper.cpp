@@ -126,7 +126,7 @@ bool home_selector()
 		{
 			move(0, 1,0);
 			uint16_t sg = tmc2130_read_sg(AX_SEL);
-			if ((i > 16) && (sg < 5))	break;
+			if ((i > 16) && (sg < 6))	break;
 
 			_c++;
 			if (i == 3000) { _l++; }

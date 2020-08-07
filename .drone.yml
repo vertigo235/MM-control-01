@@ -37,14 +37,14 @@ steps:
   - name: prepare-hex
     image: vertigo235/fw-build:develop
     commands:
-      - cd $CI_WORKSPACE
+      - cd $DRONE_WORKSPACE
       - mkdir out
       - mkdir fileshare
       - cd $DRONE_WORKSPACE_BASE/
-      #- mv `find -name "*.zip"` $CI_WORKSPACE/out
-      - mv `find -name "*.hex"` $CI_WORKSPACE/out
-      - cd $CI_WORKSPACE/fileshare
-      - zip -q -j prusa3d_mmu_fw_$(git rev-parse --short HEAD).zip $CI_WORKSPACE/out/MM-control-01*.*
+      #- mv `find -name "*.zip"` $DRONE_WORKSPACE/out
+      - mv `find -name "*.hex"` $DRONE_WORKSPACE/out
+      - cd $DRONE_WORKSPACE/fileshare
+      - zip -q -j prusa3d_mmu_fw_$(git rev-parse --short HEAD).zip $DRONE_WORKSPACE/out/MM-control-01*.*
 
     when:
       event:
@@ -58,7 +58,7 @@ steps:
     image: vertigo235/fw-build:develop
     failure: ignore
     commands:
-      - cd $CI_WORKSPACE/fileshare
+      - cd $DRONE_WORKSPACE/fileshare
       - curl --upload-file prusa3d_mmu_fw_$(git rev-parse --short HEAD).zip https://transfer.sh/prusa3d_fw_$(git rev-parse --short HEAD).zip
       - echo
     when:
@@ -73,7 +73,7 @@ steps:
     image: vertigo235/fw-build:develop
     failure: ignore
     commands:
-      - cd $CI_WORKSPACE/fileshare
+      - cd $DRONE_WORKSPACE/fileshare
       - curl -F "file=@prusa3d_mmu_fw_$(git rev-parse --short HEAD).zip" https://file.io
       - echo
     when:
